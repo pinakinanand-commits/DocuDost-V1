@@ -17,8 +17,30 @@ if uploaded_file and api_key:
     if st.button("Analyze Now"):
         try:
             # Force setting the API key
+try:
             genai.configure(api_key=api_key.strip())
             
+            # Attempting to use the most compatible model string
+            # 'gemini-1.5-flash-latest' often works when 'gemini-1.5-flash' gives 404
+            model = genai.GenerativeModel('gemini-1.5-flash-latest')
+            
+            with st.spinner('Scanning Document...'):
+                response = model.generate_content([
+                    "You are a legal expert. Audit this document and list 3 critical risks in Hinglish.",
+                    img
+                ])
+                st.success("Analysis Done!")
+                st.markdown("### 📋 Audit Report")
+                st.write(response.text)
+                
+        except Exception as e:
+            # If 1.5 Flash still fails, we fall back to the ultra-stable Pro model
+            try:
+                model = genai.GenerativeModel('gemini-1.5-pro')
+                response = model.generate_content(["Analyze this document in Hinglish", img])
+                st.write(response.text)
+            except Exception as e2:
+                st.error(f"Technical Error: {e2}")            
             # Use 'gemini-1.5-flash' - Is line ko dhyan se dekho
             model = genai.GenerativeModel('gemini-1.5-flash')
             
