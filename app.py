@@ -18,8 +18,8 @@ st.markdown("""
 st.title("🛡️ DocuDost: Secure Legal Auditor")
 
 # --- ADMIN PASSWORD LOCK ---
-PASSWORD = "admin" 
-
+# Ab ye Admin Password bhi secrets se uthayega
+PASSWORD = st.secrets["APP_PASSWORD"]
 with st.sidebar:
     st.header("🔒 Access Control")
     user_pass = st.text_input("Enter Access Password", type="password")
