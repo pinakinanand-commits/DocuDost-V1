@@ -18,7 +18,7 @@ if uploaded_file and api_key:
     image = Image.open(uploaded_file)
     st.image(image, caption="Document Loaded", width=300)
     
-    if st.button("Analyze with Llama-3.2 (90B)"):
+    if st.button("Analyze Document"):
         try:
             client = Groq(api_key=api_key)
             
@@ -26,14 +26,14 @@ if uploaded_file and api_key:
             image.save(buffered, format="JPEG")
             base64_image = base64.b64encode(buffered.getvalue()).decode('utf-8')
 
-            with st.spinner('Llama-3.2-90B (The Beast) analysis kar raha hai...'):
-                # UPDATED MODEL NAME HERE
+            with st.spinner('Llama-3.2 Vision analysis kar raha hai...'):
+                # UPDATED TO THE CURRENT ACTIVE VISION MODEL
                 chat_completion = client.chat.completions.create(
                     messages=[
                         {
                             "role": "user",
                             "content": [
-                                {"type": "text", "text": "Analyze this legal document and list 3 major risks in Hinglish. Be very detailed."},
+                                {"type": "text", "text": "Analyze this legal document and list 3 major risks in Hinglish."},
                                 {
                                     "type": "image_url",
                                     "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"},
@@ -41,7 +41,7 @@ if uploaded_file and api_key:
                             ],
                         }
                     ],
-                    model="llama-3.2-90b-vision-preview", # New Stable Model
+                    model="llama-3.2-11b-vision-preview", # Iska naya stable version ab active hai
                 )
                 
                 st.success("Analysis Complete!")
@@ -50,3 +50,4 @@ if uploaded_file and api_key:
                 
         except Exception as e:
             st.error(f"Error: {e}")
+            st.info("Bhai, Groq console par 'Models' tab check karein agar model decommission dikhaye.")
