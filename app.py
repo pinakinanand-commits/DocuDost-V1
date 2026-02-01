@@ -19,9 +19,7 @@ if uploaded_file and api_key:
         try:
             # Step 1: Configure AI
             genai.configure(api_key=api_key.strip())
-        try:
-            genai.configure(api_key=api_key.strip())
-            
+                    
             # Fix: Using the exact model string that works with both v1 and v1beta
             model = genai.GenerativeModel('gemini-1.5-flash-latest')
             
