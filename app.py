@@ -62,13 +62,20 @@ def analyze_document(key, img_file):
 if uploaded_file:
     st.image(uploaded_file, width=300)
     
+    if uploaded_file:
+    # Pehle hi image ko load kar lo taaki 'save' error na aaye
+    image_to_show = Image.open(uploaded_file)
+    st.image(image_to_show, width=300)
+    
     if st.button("Start Audit"):
         if user_pass != PASSWORD:
             st.error("Ghalat Password! Bhai, sahi password daalo.")
         else:
             with st.spinner("AI is auditing..."):
-                result = analyze_document(api_key, uploaded_file)
-                if 'choices' in result:
+                # Yahan hum 'image_to_show' bhej rahe hain, 'uploaded_file' nahi
+                result = analyze_document(api_key, image_to_show)
+                
+                if result and 'choices' in result:
                     report = result['choices'][0]['message']['content']
                     st.markdown("### 📋 Final Report")
                     
@@ -81,4 +88,4 @@ if uploaded_file:
                         else:
                             st.write(line)
                 else:
-                    st.error("API Error. Please check balance.")
+                    st.error("API Error. Check OpenRouter balance or Secrets.")
