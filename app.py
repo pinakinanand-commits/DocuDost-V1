@@ -74,4 +74,21 @@ if uploaded_file:
         else:
             with st.spinner("AI document padh raha hai... Thoda sabar rakhein."):
                 try:
-                    result
+                    result = analyze_document(api_key, img)
+                    
+                    if 'choices' in result:
+                        report = result['choices'][0]['message']['content']
+                        st.success("✅ Audit Complete!")
+                        st.markdown("### 📋 Legal Audit Report (Hinglish)")
+                        st.markdown(f"<div class='report-box'>{report}</div>", unsafe_allow_html=True)
+                        
+                        # Download Button
+                        st.download_button("Download Report", report, file_name="legal_audit.txt")
+                    else:
+                        st.error("Model busy ya key error. Dubara koshish karein.")
+                        st.json(result)
+                except Exception as e:
+                    st.error(f"Connection Error: {e}")
+
+else:
+    st.info("Document upload karein audit shuru karne ke liye.")
