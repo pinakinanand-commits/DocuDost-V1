@@ -21,7 +21,20 @@ if uploaded_file and api_key:
         try:
             # Force setting the API key
             genai.configure(api_key=api_key.strip())
+try:
+            genai.configure(api_key=api_key.strip())
             
+            # Stable model for image analysis
+            model = genai.GenerativeModel('gemini-pro-vision') 
+            
+            with st.spinner('Analyzing...'):
+                response = model.generate_content([
+                    "Analyze this document image. Identify document type and list 3 legal risks in Hinglish.", 
+                    img
+                ])
+                st.success("Done!")
+                st.markdown("### 📋 Audit Report")
+                st.write(response.text)            
             # Use the most stable model name
             model = genai.GenerativeModel('gemini-1.5-flash')
             
