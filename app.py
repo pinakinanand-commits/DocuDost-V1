@@ -2,40 +2,23 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 
-st.set_page_config(page_title="DocuDost AI", page_icon="🛡️")
-st.title("🛡️ DocuDost: AI Legal Auditor")
+st.title("🛡️ DocuDost: AI Auditor")
 
 with st.sidebar:
-    api_key = st.text_input("Enter Gemini API Key", type="password")
-    st.info("Make sure you updated requirements.txt first!")
+    api_key = st.text_input("Gemini API Key", type="password")
 
-uploaded_file = st.file_uploader("Upload Document Image", type=["png", "jpg", "jpeg"])
+uploaded_file = st.file_uploader("Upload Image", type=["png", "jpg", "jpeg"])
 
 if uploaded_file and api_key:
     img = Image.open(uploaded_file)
-    st.image(img, caption="Document Loaded", width=300)
-    
-    if st.button("Analyze Document"):
+    if st.button("Analyze"):
         try:
-            # 1. Setup
             genai.configure(api_key=api_key.strip())
+            # Sabse zyada compatible name
+            model = genai.GenerativeModel('gemini-1.5-flash')
             
-            # 2. Latest Model Name
-            model = genai.GenerativeModel(model_name='gemini-1.5-flash')
-            
-            with st.spinner('AI is analyzing...'):
-                # 3. Request
-                response = model.generate_content([
-                    "Analyze this document image and list 3 major risks in Hinglish.", 
-                    img
-                ])
-                st.success("Analysis Complete!")
-                st.markdown("### 📋 Audit Report")
-                st.write(response.text)
-                
+            response = model.generate_content(["Audit this in Hinglish", img])
+            st.write(response.text)
         except Exception as e:
-            # Yeh block missing hone se SyntaxError aata hai
-            st.error(f"Technical Error: {e}")
-
-elif not api_key and uploaded_file:
-    st.warning("Please enter your API Key in the sidebar.")
+            st.error(f"Error: {e}")
+            st.info("Bhai, ek baar 'aistudio.google.com' par jaakar 'Naya Project' bana kar key generate karo.")
