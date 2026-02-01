@@ -19,8 +19,24 @@ if uploaded_file and api_key:
         try:
             # Step 1: Configure AI
             genai.configure(api_key=api_key.strip())
-            model = genai.GenerativeModel('gemini-1.5-flash')
+try:
+            genai.configure(api_key=api_key.strip())
             
+            # Fix: Using the exact model string that works with both v1 and v1beta
+            model = genai.GenerativeModel('gemini-1.5-flash-latest')
+            
+            with st.spinner('Scanning legal clauses...'):
+                # Note: Content generation syntax for Flash
+                response = model.generate_content([
+                    "You are a legal expert. Analyze this image and list 3 major risks in Hinglish.", 
+                    img
+                ])
+                st.success("Analysis Done!")
+                st.markdown("### 📋 Audit Report")
+                st.write(response.text)
+                
+        except Exception as e:
+            st.error(f"AI Error: {e}")            
             # Step 2: Show loading and get response
             with st.spinner('Scanning legal clauses...'):
                 response = model.generate_content([
