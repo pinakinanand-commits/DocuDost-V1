@@ -16,38 +16,15 @@ if uploaded_file and api_key:
     
     if st.button("Analyze Now"):
         try:
-            # Force setting the API key
-try:
+            # 4 spaces ka gap zaroori hai try ke niche
             genai.configure(api_key=api_key.strip())
             
-            # Attempting to use the most compatible model string
-            # 'gemini-1.5-flash-latest' often works when 'gemini-1.5-flash' gives 404
-            model = genai.GenerativeModel('gemini-1.5-flash-latest')
-            
-            with st.spinner('Scanning Document...'):
-                response = model.generate_content([
-                    "You are a legal expert. Audit this document and list 3 critical risks in Hinglish.",
-                    img
-                ])
-                st.success("Analysis Done!")
-                st.markdown("### 📋 Audit Report")
-                st.write(response.text)
-                
-        except Exception as e:
-            # If 1.5 Flash still fails, we fall back to the ultra-stable Pro model
-            try:
-                model = genai.GenerativeModel('gemini-1.5-pro')
-                response = model.generate_content(["Analyze this document in Hinglish", img])
-                st.write(response.text)
-            except Exception as e2:
-                st.error(f"Technical Error: {e2}")            
-            # Use 'gemini-1.5-flash' - Is line ko dhyan se dekho
+            # Model selection
             model = genai.GenerativeModel('gemini-1.5-flash')
             
             with st.spinner('DocuDost is auditing...'):
-                # Note: Content generation
                 response = model.generate_content([
-                    "Analyze this document image. Identify document type and list 3 legal risks in Hinglish.", 
+                    "Analyze this document and list 3 legal risks in Hinglish.", 
                     img
                 ])
                 st.success("Analysis Done!")
@@ -55,5 +32,9 @@ try:
                 st.write(response.text)
                 
         except Exception as e:
-            # Detailed Error for debugging
-            st.error(f"Technical Error: {str(e)}")
+            # 4 spaces ka gap yahan bhi
+            st.error(f"Error: {e}")
+            st.info("Bhai, agar 404 aaye toh Google AI Studio mein Naya Project banao.")
+
+elif not api_key and uploaded_file:
+    st.warning("Please enter your API Key in the sidebar.")
