@@ -17,8 +17,7 @@ st.markdown("""
 
 st.title("🛡️ DocuDost: Secure Legal Auditor")
 
-# --- STEP 1: ADMIN PASSWORD LOCK ---
-# Aap ye password kisi ko bhi bata sakte hain (e.g., 'india123')
+# --- ADMIN PASSWORD LOCK ---
 PASSWORD = "admin" 
 
 with st.sidebar:
@@ -26,9 +25,8 @@ with st.sidebar:
     user_pass = st.text_input("Enter Access Password", type="password")
     st.info("Bhai, bina password ke audit nahi chalega!")
 
-# --- STEP 2: GET API KEY FROM SECRETS ---
+# --- GET API KEY FROM SECRETS ---
 try:
-    # Ye line Streamlit ke backend se key uthayegi
     api_key = st.secrets["OPENROUTER_API_KEY"]
 except:
     st.error("Error: Streamlit Secrets mein API Key missing hai!")
@@ -36,9 +34,10 @@ except:
 
 uploaded_file = st.file_uploader("Upload Document (Image)", type=["png", "jpg", "jpeg"])
 
-def analyze_document(key, img_file):
+def analyze_document(key, img_obj):
     img_byte_arr = io.BytesIO()
-    img_file.save(img_byte_arr, format='JPEG')
+    # Yahan img_obj already Image.open() se pass ho raha hai
+    img_obj.convert('RGB').save(img_byte_arr, format='JPEG')
     img_b64 = base64.b64encode(img_byte_arr.getvalue()).decode('utf-8')
 
     url = "https://openrouter.ai/api/v1/chat/completions"
@@ -59,11 +58,9 @@ def analyze_document(key, img_file):
     response = requests.post(url, headers=headers, json=payload)
     return response.json()
 
+# --- MAIN LOGIC ---
 if uploaded_file:
-    st.image(uploaded_file, width=300)
-    
-    if uploaded_file:
-    # Pehle hi image ko load kar lo taaki 'save' error na aaye
+    # Image load kar rahe hain display aur process ke liye
     image_to_show = Image.open(uploaded_file)
     st.image(image_to_show, width=300)
     
@@ -72,7 +69,7 @@ if uploaded_file:
             st.error("Ghalat Password! Bhai, sahi password daalo.")
         else:
             with st.spinner("AI is auditing..."):
-                # Yahan hum 'image_to_show' bhej rahe hain, 'uploaded_file' nahi
+                # Analyze function ko call kar rahe hain
                 result = analyze_document(api_key, image_to_show)
                 
                 if result and 'choices' in result:
