@@ -8,32 +8,29 @@ st.title("🛡️ DocuDost: AI Legal Auditor")
 with st.sidebar:
     api_key = st.text_input("Enter Gemini API Key", type="password")
 
-uploaded_file = st.file_uploader("Upload Document Image", type=["png", "jpg", "jpeg"])
+uploaded_file = st.file_uploader("Upload Document", type=["png", "jpg", "jpeg"])
 
 if uploaded_file and api_key:
     img = Image.open(uploaded_file)
     st.image(img, caption="Document Loaded", width=300)
     
-    if st.button("Analyze Document"):
+    if st.button("Analyze Now"):
         try:
-            # Step 1: Force Configuration
+            # Force the API to use the stable v1 version
             genai.configure(api_key=api_key.strip())
             
-            # Step 2: Use the full path for the model (fixes 404)
-            model = genai.GenerativeModel(model_name='models/gemini-1.5-flash')
+            # Using the exact string that Google's stable API expects
+            model = genai.GenerativeModel('gemini-1.5-flash')
             
-            with st.spinner('AI is analyzing...'):
+            with st.spinner('DocuDost is auditing...'):
                 response = model.generate_content([
-                    "Identify this document and list 3 legal risks in Hinglish.", 
+                    "Analyze this document and list 3 legal risks in Hinglish.", 
                     img
                 ])
-                st.success("Analysis Complete!")
+                st.success("Analysis Done!")
                 st.markdown("### 📋 Audit Report")
                 st.write(response.text)
                 
         except Exception as e:
-            # Yeh block missing hone se SyntaxError aata hai
             st.error(f"Error: {e}")
-
-elif not api_key and uploaded_file:
-    st.warning("Please enter your API Key in the sidebar.")
+            st.info("Check: Google AI Studio -> Create API Key in NEW project.")
