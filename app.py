@@ -18,7 +18,19 @@ if uploaded_file and api_key:
         try:
             # Yahan dhyan dein: Ye lines thoda aage (indent) hain
             genai.configure(api_key=api_key.strip())
-            model = genai.GenerativeModel('gemini-1.5-flash')
+try:
+            genai.configure(api_key=api_key.strip())
+            
+            # Yahan humne model ka sahi naam aur version specify kiya hai
+            model = genai.GenerativeModel(model_name='gemini-1.5-flash')
+            
+            with st.spinner('Scanning legal clauses...'):
+                response = model.generate_content([
+                    "Audit this legal document image and list 3 risks in Hinglish.", 
+                    img
+                ])
+                st.markdown("### 📋 Audit Report")
+                st.write(response.text)
             
             with st.spinner('Scanning legal clauses...'):
                 response = model.generate_content([
