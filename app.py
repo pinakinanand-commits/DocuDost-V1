@@ -4,56 +4,74 @@ import base64
 from PIL import Image
 import io
 
-st.set_page_config(page_title="DocuDost AI", page_icon="🛡️")
+# Page Configuration
+st.set_page_config(page_title="DocuDost AI", page_icon="⚖️", layout="centered")
+
+# Custom CSS for better looks
+st.markdown("""
+    <style>
+    .main { background-color: #f5f7f9; }
+    .stButton>button { width: 100%; border-radius: 20px; height: 3em; background-color: #007bff; color: white; }
+    .report-box { padding: 20px; border-radius: 10px; background-color: white; border-left: 5px solid #007bff; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); }
+    </style>
+    """, unsafe_allow_html=True)
+
 st.title("🛡️ DocuDost: AI Legal Auditor")
+st.write("Apne legal documents upload karein aur AI se risks jaaniye.")
 
-api_key = st.sidebar.text_input("Enter OpenRouter API Key", type="password")
-uploaded_file = st.file_uploader("Upload Document", type=["png", "jpg", "jpeg"])
+# Sidebar for Settings
+with st.sidebar:
+    st.header("🔑 API Configuration")
+    api_key = st.text_input("Enter OpenRouter API Key", type="password")
+    st.info("Model: Llama-3.2 Vision (Stable)")
+    st.markdown("---")
+    st.write("Made with ❤️ by DocuDost Team")
 
-def call_openrouter(key, img_b64, model_name):
+# File Uploader
+uploaded_file = st.file_uploader("Upload Document (Image)", type=["png", "jpg", "jpeg"])
+
+def analyze_document(key, img_file):
+    img_byte_arr = io.BytesIO()
+    img_file.save(img_byte_arr, format='JPEG')
+    img_b64 = base64.b64encode(img_byte_arr.getvalue()).decode('utf-8')
+
     url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {key}",
         "Content-Type": "application/json",
     }
+    
+    # Updated Prompt for better Hinglish Analysis
+    prompt = """Analyze this legal document image. 
+    1. Identify what type of document it is.
+    2. List 3-4 major legal risks or hidden points.
+    Write the response in simple Hinglish (mixture of Hindi and English) so a common person can understand."""
+
     payload = {
-        "model": model_name,
+        "model": "meta-llama/llama-3.2-11b-vision-instruct",
         "messages": [
             {
                 "role": "user",
                 "content": [
-                    {"type": "text", "text": "Analyze this document and list 3 legal risks in Hinglish. Be quick!"},
+                    {"type": "text", "text": prompt},
                     {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}}
                 ]
             }
         ]
     }
-    # Timeout 30 seconds ka taaki 'goom goom' na hota rahe
-    response = requests.post(url, headers=headers, json=payload, timeout=30)
+    
+    response = requests.post(url, headers=headers, json=payload, timeout=60)
     return response.json()
 
-if uploaded_file and api_key:
+# Main Logic
+if uploaded_file:
     img = Image.open(uploaded_file)
-    st.image(img, width=300)
+    st.image(img, caption="Document Preview", use_container_width=True)
     
-    if st.button("Instant Audit"):
-        img_byte_arr = io.BytesIO()
-        img.save(img_byte_arr, format='JPEG')
-        img_b64 = base64.b64encode(img_byte_arr.getvalue()).decode('utf-8')
-
-        # 2026 ka sabse fast model jo OpenRouter par FREE hai
-        fast_model = "google/gemini-2.0-flash-exp:free"
-        
-        with st.spinner(f"Processing with {fast_model}..."):
-            try:
-                result = call_openrouter(api_key, img_b64, fast_model)
-                if 'choices' in result:
-                    st.success("Analysis Complete!")
-                    st.write(result['choices'][0]['message']['content'])
-                else:
-                    st.error("Model busy, trying fallback...")
-                    # Agar pehla fail ho toh Llama try karein
-                    result_fallback = call_openrouter(api_key, img_b64, "meta-llama/llama-3.2-11b-vision-instruct")
-                    st.write(result_fallback['choices'][0]['message']['content'])
-            except Exception as e:
-                st.error(f"Slow connection: {e}")
+    if st.button("🔍 Start Legal Audit"):
+        if not api_key:
+            st.error("Bhai, pehle Sidebar mein API Key toh daalo!")
+        else:
+            with st.spinner("AI document padh raha hai... Thoda sabar rakhein."):
+                try:
+                    result
