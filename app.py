@@ -5,50 +5,56 @@ from PIL import Image
 import io
 
 st.set_page_config(page_title="DocuDost AI", page_icon="🛡️")
-st.title("🛡️ DocuDost: AI Legal Auditor")
+st.title("🛡️ DocuDost: AI Legal Auditor (Stable Mode)")
 
-api_key = st.sidebar.text_input("Enter Gemini API Key", type="password")
+# Sidebar for OpenRouter Key
+api_key = st.sidebar.text_input("Enter OpenRouter API Key", type="password")
 uploaded_file = st.file_uploader("Upload Document", type=["png", "jpg", "jpeg"])
 
-def try_analyze(key, img_b64, model_name):
-    # Try with both v1 and v1beta automatically
-    for version in ["v1", "v1beta"]:
-        url = f"https://generativelanguage.googleapis.com/{version}/models/{model_name}:generateContent?key={key}"
-        payload = {
-            "contents": [{
-                "parts": [
-                    {"text": "Analyze this document and list 3 legal risks in Hinglish."},
-                    {"inline_data": {"mime_type": "image/jpeg", "data": img_b64}}
+def analyze_document_openrouter(key, img_file):
+    img_byte_arr = io.BytesIO()
+    img_file.save(img_byte_arr, format='JPEG')
+    img_b64 = base64.b64encode(img_byte_arr.getvalue()).decode('utf-8')
+
+    # OpenRouter API Endpoint (Sabse Stable)
+    url = "https://openrouter.ai/api/v1/chat/completions"
+    
+    headers = {
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json"
+    }
+    
+    payload = {
+        "model": "meta-llama/llama-3.2-11b-vision-instruct:free", # FREE MODEL
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "Analyze this document and list 3 legal risks in Hinglish."},
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}
+                    }
                 ]
-            }]
-        }
-        response = requests.post(url, json=payload)
-        res_json = response.json()
-        if 'candidates' in res_json:
-            return res_json['candidates'][0]['content']['parts'][0]['text']
-    return None
+            }
+        ]
+    }
+    
+    response = requests.post(url, headers=headers, json=payload)
+    return response.json()
 
 if uploaded_file and api_key:
     img = Image.open(uploaded_file)
     st.image(img, width=300)
     
-    if st.button("Start Final Audit"):
-        img_byte_arr = io.BytesIO()
-        img.save(img_byte_arr, format='JPEG')
-        img_b64 = base64.b64encode(img_byte_arr.getvalue()).decode('utf-8')
-
-        # List of all possible models in 2026
-        models_to_try = ["gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-1.5-pro"]
-        
-        success = False
-        for m in models_to_try:
-            with st.spinner(f"Trying Model: {m}..."):
-                report = try_analyze(api_key, img_b64, m)
-                if report:
-                    st.success(f"Success! (Used: {m})")
-                    st.write(report)
-                    success = True
-                    break
-        
-        if not success:
-            st.error("Bhai, Google ke saare raste band hain. Ek baar 'Google AI Studio' mein jaakar naya API Key generate karein.")
+    if st.button("Final Analysis"):
+        with st.spinner("Analyzing via Llama-3 (Stable)..."):
+            result = analyze_document_openrouter(api_key, img)
+            
+            if 'choices' in result:
+                text = result['choices'][0]['message']['content']
+                st.success("Bhai, Ho Gaya! Report dekho:")
+                st.write(text)
+            else:
+                st.error("Error Detail:")
+                st.json(result)
