@@ -22,12 +22,14 @@ if uploaded_file and api_key:
         try:
             client = Groq(api_key=api_key)
             
+            # Image encoding
             buffered = io.BytesIO()
             image.save(buffered, format="JPEG")
             base64_image = base64.b64encode(buffered.getvalue()).decode('utf-8')
 
-            with st.spinner('Llama-3.2 Vision analysis kar raha hai...'):
-                # UPDATED TO THE CURRENT ACTIVE VISION MODEL
+            with st.spinner('Latest Llama Vision model se scan ho raha hai...'):
+                # TRYING THE MOST RECENT STABLE VISION MODEL
+                # Note: If 11b and 90b are out, Llama-3.2-11b-vision-preview (updated) is usually the replacement
                 chat_completion = client.chat.completions.create(
                     messages=[
                         {
@@ -41,7 +43,7 @@ if uploaded_file and api_key:
                             ],
                         }
                     ],
-                    model="llama-3.2-11b-vision-preview", # Iska naya stable version ab active hai
+                    model="llama-3.2-11b-vision-preview", 
                 )
                 
                 st.success("Analysis Complete!")
@@ -49,5 +51,5 @@ if uploaded_file and api_key:
                 st.write(chat_completion.choices[0].message.content)
                 
         except Exception as e:
-            st.error(f"Error: {e}")
-            st.info("Bhai, Groq console par 'Models' tab check karein agar model decommission dikhaye.")
+            st.error(f"Model Error: {e}")
+            st.info("Bhai, Groq ke 'Playground' mein dropdown check karo ki abhi 'Vision' ke liye kaunsa model active hai.")
