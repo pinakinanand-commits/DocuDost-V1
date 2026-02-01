@@ -28,7 +28,24 @@ if uploaded_file:
                 genai.configure(api_key=api_key.strip())
                 
                 # We try 'gemini-1.5-flash' first, then 'gemini-pro-vision'
-                model_name = 'gemini-1.5-flash'
+try:
+                # API setup with explicit version handling
+                genai.configure(api_key=api_key.strip())
+                
+                # 'gemini-1.5-flash-8b' ya 'gemini-1.5-pro' v1beta par 100% chalte hain
+                model_name = 'gemini-1.5-pro' 
+                model = genai.GenerativeModel(model_name)
+                
+                with st.spinner(f'Analyzing using {model_name}...'):
+                    # Kuch models ko content bytes mein chahiye hota hai
+                    response = model.generate_content([
+                        "Analyze this legal document image and list 3 major risks in professional Hinglish.", 
+                        img
+                    ])
+                    
+                    st.success("Audit Completed!")
+                    st.markdown("### 📋 Audit Report")
+                    st.write(response.text)
                 model = genai.GenerativeModel(model_name)
                 
                 with st.spinner(f'Analyzing using {model_name}...'):
