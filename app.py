@@ -20,7 +20,9 @@ if uploaded_file and api_key:
         model = genai.GenerativeModel('gemini-1.5-flash')
 if st.button("Analyze Document"):
     try:
-        genai.configure(api_key=api_key.strip()) # strip() space hata dega
+        # Purani line: genai.configure(api_key=api_key)
+# Nayi line ye likhein:
+genai.configure(api_key=api_key.strip())
         model = genai.GenerativeModel('gemini-1.5-flash')
         
         # Image ko sahi format mein bhejna
