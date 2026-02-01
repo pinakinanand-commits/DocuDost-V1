@@ -5,24 +5,21 @@ from PIL import Image
 import io
 
 st.set_page_config(page_title="DocuDost AI", page_icon="🛡️")
-st.title("🛡️ DocuDost: AI Legal Auditor (Direct Engine)")
+st.title("🛡️ DocuDost: AI Legal Auditor")
 
-# Sidebar for API Key
 api_key = st.sidebar.text_input("Enter Gemini API Key", type="password")
-
 uploaded_file = st.file_uploader("Upload Document", type=["png", "jpg", "jpeg"])
 
 def analyze_document_direct(key, img_file):
-    # Image ko base64 mein convert karna
     img_byte_arr = io.BytesIO()
     img_file.save(img_byte_arr, format='JPEG')
     img_b64 = base64.b64encode(img_byte_arr.getvalue()).decode('utf-8')
 
-    # Seedha Google API ka Stable URL (No Library needed)
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={key}"
+    # YAHAN BADLAV HAI: 'v1' ki jagah 'v1beta' use kar rahe hain
+    # Kyunki aapka account isi version par model support kar raha hai
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={key}"
     
     headers = {'Content-Type': 'application/json'}
-    
     payload = {
         "contents": [{
             "parts": [
@@ -40,14 +37,13 @@ if uploaded_file and api_key:
     st.image(img, width=300)
     
     if st.button("Start Audit"):
-        with st.spinner("Direct Connection to Google Server..."):
+        with st.spinner("Connecting to Secure Server..."):
             result = analyze_document_direct(api_key, img)
             
-            # Response check
             if 'candidates' in result:
                 text = result['candidates'][0]['content']['parts'][0]['text']
                 st.success("Analysis Complete!")
                 st.write(text)
             else:
-                st.error("Server Response Error")
-                st.json(result) # Isse humein asli wajah pata chalegi
+                st.error("Model Error")
+                st.json(result) # Isse final check ho jayega
