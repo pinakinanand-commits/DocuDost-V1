@@ -20,8 +20,22 @@ if uploaded_file and api_key:
             genai.configure(api_key=api_key.strip())
             
             # Model selection
-            model = genai.GenerativeModel('gemini-1.5-flash')
+        try:
+            genai.configure(api_key=api_key.strip())
             
+            # Full path use karne se Google confusion nahi karega
+            model = genai.GenerativeModel(model_name='models/gemini-1.5-flash')
+            
+            with st.spinner('DocuDost is auditing...'):
+                response = model.generate_content([
+                    "Analyze this document and list 3 legal risks in Hinglish.", 
+                    img
+                ])
+                st.success("Analysis Complete!")
+                st.write(response.text)
+                
+        except Exception as e:
+            st.error(f"Error: {e}")            
             with st.spinner('DocuDost is auditing...'):
                 response = model.generate_content([
                     "Analyze this document and list 3 legal risks in Hinglish.", 
