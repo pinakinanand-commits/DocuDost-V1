@@ -1,61 +1,49 @@
 import streamlit as st
 import google.generativeai as genai
 from PIL import Image
-import os
 
-st.set_page_config(page_title="DocuDost AI", page_icon="🛡️")
-st.title("🛡️ DocuDost: AI Legal Auditor")
+# Page Setup
+st.set_page_config(page_title="DocuDost AI", page_icon="🛡️", layout="centered")
+st.title("🛡️ DocuDost: Professional AI Auditor")
+st.markdown("---")
 
-# API Key input
+# Sidebar for Key
 with st.sidebar:
+    st.header("Authentication")
     api_key = st.text_input("Enter Gemini API Key", type="password")
-    st.info("Get key: aistudio.google.com")
+    st.info("Get your key: [Google AI Studio](https://aistudio.google.com/)")
 
-uploaded_file = st.file_uploader("Upload Document (Image)", type=["png", "jpg", "jpeg"])
+# File Uploader
+uploaded_file = st.file_uploader("Upload Legal Document (Image)", type=["png", "jpg", "jpeg"])
 
-if uploaded_file and api_key:
+if uploaded_file:
     img = Image.open(uploaded_file)
-    st.image(img, caption="Document Loaded", width=300)
+    st.image(img, caption="Document Preview", use_container_width=True)
     
-    if st.button("🚀 Analyze Now"):
-        try:
-            # Force setting the API key
-            genai.configure(api_key=api_key.strip())
-try:
-            genai.configure(api_key=api_key.strip())
-            
-            # Stable model for image analysis
-            model = genai.GenerativeModel('gemini-pro-vision') 
-            
-            with st.spinner('Analyzing...'):
-                response = model.generate_content([
-                    "Analyze this document image. Identify document type and list 3 legal risks in Hinglish.", 
-                    img
-                ])
-                st.success("Done!")
-                st.markdown("### 📋 Audit Report")
-                st.write(response.text)            
-            # Use the most stable model name
-            model = genai.GenerativeModel('gemini-1.5-flash')
-            
-            with st.spinner('Analyzing with Google AI...'):
-                # Content generation
-                response = model.generate_content([
-                    "Analyze this document image. Identify the document type and list 3 potential legal risks in Hinglish.", 
-                    img
-                ])
+    if st.button("🚀 Run Professional Audit"):
+        if not api_key:
+            st.error("Please enter your API Key in the sidebar!")
+        else:
+            try:
+                genai.configure(api_key=api_key.strip())
                 
-                if response.text:
-                    st.success("Analysis Ready!")
-                    st.markdown("### 📋 Professional Audit Report")
-                    st.write(response.text)
-                else:
-                    st.error("AI couldn't read the image. Please try a clearer photo.")
+                # We try 'gemini-1.5-flash' first, then 'gemini-pro-vision'
+                model_name = 'gemini-1.5-flash'
+                model = genai.GenerativeModel(model_name)
+                
+                with st.spinner(f'Analyzing using {model_name}...'):
+                    prompt = "You are a senior lawyer. Analyze this document and list 3 major risks and a safety score (0-100) in professional Hinglish."
+                    response = model.generate_content([prompt, img])
                     
-        except Exception as e:
-            # Detailed Error for debugging
-            st.error(f"Technical Error: {str(e)}")
-            st.info("Tip: Check if your API Key is active at Google AI Studio.")
+                    st.success("Audit Completed Successfully!")
+                    st.markdown("### 📋 Audit Report")
+                    st.write(response.text)
+                    
+            except Exception as e:
+                # This is the 'except' block that was missing!
+                st.error(f"Technical Notice: {str(e)}")
+                st.info("Try updating the model name in code if 404 persists.")
 
-elif not api_key and uploaded_file:
-    st.warning("Please enter your API Key in the sidebar.")
+# Footer
+st.markdown("---")
+st.caption("DocuDost AI Prototype v1.0 | Confidential")
