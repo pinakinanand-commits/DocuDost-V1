@@ -16,15 +16,16 @@ if uploaded_file and api_key:
     
     if st.button("Analyze Now"):
         try:
-            # Force the API to use the stable v1 version
+            # Force setting the API key
             genai.configure(api_key=api_key.strip())
             
-            # Using the exact string that Google's stable API expects
+            # Use 'gemini-1.5-flash' - Is line ko dhyan se dekho
             model = genai.GenerativeModel('gemini-1.5-flash')
             
             with st.spinner('DocuDost is auditing...'):
+                # Note: Content generation
                 response = model.generate_content([
-                    "Analyze this document and list 3 legal risks in Hinglish.", 
+                    "Analyze this document image. Identify document type and list 3 legal risks in Hinglish.", 
                     img
                 ])
                 st.success("Analysis Done!")
@@ -32,5 +33,5 @@ if uploaded_file and api_key:
                 st.write(response.text)
                 
         except Exception as e:
-            st.error(f"Error: {e}")
-            st.info("Check: Google AI Studio -> Create API Key in NEW project.")
+            # Detailed Error for debugging
+            st.error(f"Technical Error: {str(e)}")
