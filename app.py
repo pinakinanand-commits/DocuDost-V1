@@ -1,51 +1,39 @@
 import streamlit as st
-from groq import Groq
-import base64
+import google.generativeai as genai
 from PIL import Image
-import io
 
 st.set_page_config(page_title="DocuDost AI", page_icon="🛡️")
 st.title("🛡️ DocuDost: AI Legal Auditor")
 
 with st.sidebar:
-    st.header("Settings")
-    api_key = st.text_input("Enter Groq API Key", type="password")
-    # Yahan wo naam likhein jo aapne Groq console par dekha
-    model_choice = st.text_input("Model Name", value="llama-3.2-11b-vision-preview")
+    api_key = st.text_input("Enter Gemini API Key", type="password")
+    st.info("Get key from: aistudio.google.com")
 
-uploaded_file = st.file_uploader("Upload Document (Image)", type=["png", "jpg", "jpeg"])
+uploaded_file = st.file_uploader("Upload Document Image", type=["png", "jpg", "jpeg"])
 
 if uploaded_file and api_key:
-    image = Image.open(uploaded_file)
-    st.image(image, caption="Document Loaded", width=300)
+    img = Image.open(uploaded_file)
+    st.image(img, caption="Document Loaded", width=300)
     
     if st.button("Analyze Document"):
         try:
-            client = Groq(api_key=api_key)
+            genai.configure(api_key=api_key.strip())
             
-            buffered = io.BytesIO()
-            image.save(buffered, format="JPEG")
-            base64_image = base64.b64encode(buffered.getvalue()).decode('utf-8')
-
-            with st.spinner('Scanning...'):
-                chat_completion = client.chat.completions.create(
-                    messages=[
-                        {
-                            "role": "user",
-                            "content": [
-                                {"type": "text", "text": "Analyze this document and list 3 legal risks in Hinglish."},
-                                {
-                                    "type": "image_url",
-                                    "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"},
-                                }
-                            ],
-                        }
-                    ],
-                    model=model_choice, 
-                )
-                
-                st.success("Success!")
-                st.write(chat_completion.choices[0].message.content)
+            # 2026 Stable Model Name
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            
+            with st.spinner('Scanning Document...'):
+                # Pass image and prompt clearly
+                response = model.generate_content([
+                    "Identify this document and list 3 legal risks in Hinglish.", 
+                    img
+                ])
+                st.markdown("### 📋 Audit Report")
+                st.write(response.text)
                 
         except Exception as e:
             st.error(f"Error: {e}")
+            st.info("Bhai, agar 404 aaye toh Google AI Studio mein 'Gemini API' ko enable karein.")
+
+elif not api_key and uploaded_file:
+    st.warning("Please enter your API Key.")
