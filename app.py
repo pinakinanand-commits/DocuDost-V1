@@ -19,27 +19,25 @@ if uploaded_file and api_key:
             # Step 1: Configuration
             genai.configure(api_key=api_key.strip())
             
-            # Step 2: Flash model name (v1beta ke liye sabse best)
-            # Agar ye kaam na kare, toh niche wala pro model try hoga
-            try:
-                model = genai.GenerativeModel('gemini-1.5-flash')
+            # Step 2: Hum sabse stable naya model use kar rahe hain
+            # 'gemini-1.5-flash' hi ab standard hai
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            
+            with st.spinner('AI is reading your document...'):
+                # Image ko prompt ke saath bhejna
                 response = model.generate_content([
-                    "Analyze this document and list 3 legal risks in Hinglish.", 
+                    "You are a legal expert. Identify this document and list 3 major risks in Hinglish.", 
                     img
                 ])
-            except:
-                model = genai.GenerativeModel('gemini-pro-vision')
-                response = model.generate_content([
-                    "Analyze this document and list 3 legal risks in Hinglish.", 
-                    img
-                ])
-
-            st.markdown("### 📋 Audit Report")
-            st.write(response.text)
+                
+                st.success("Analysis Complete!")
+                st.markdown("### 📋 Audit Report")
+                st.write(response.text)
                 
         except Exception as e:
-            st.error(f"Error: {e}")
-            st.info("Check if Generative Language API is enabled in your Google Cloud Console.")
+            # Agar abhi bhi error aaye, toh error message print hoga
+            st.error(f"Error Message: {e}")
+            st.info("Tip: Make sure you created the API key in 'Google AI Studio' and not Google Cloud Console.")
 
 elif not api_key and uploaded_file:
     st.warning("Please enter your API Key in the sidebar.")
