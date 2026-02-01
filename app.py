@@ -19,7 +19,8 @@ st.title("🛡️ DocuDost AI: Legal Auditor Pro")
 
 with st.sidebar:
     st.header("⚙️ Control Panel")
-    api_key = st.text_input("Enter OpenRouter API Key", type="password")
+    # Sidebar se input lene ki zaroorat nahi, seedha "Secrets" se uthayega
+    api_key = st.secrets["OPENROUTER_API_KEY"]
     st.info("Supported: JPG, PNG, JPEG")
     st.warning("Note: PDF support ke liye image scan use karein.")
 
