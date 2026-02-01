@@ -23,7 +23,6 @@ if uploaded_file and api_key:
             # 'gemini-1.5-flash' hi ab standard hai
         try:
             genai.configure(api_key=api_key.strip())
-            
             # Hum system ko bol rahe hain 'models/gemini-1.5-flash' use kare
             model = genai.GenerativeModel(model_name='models/gemini-1.5-flash')
             
