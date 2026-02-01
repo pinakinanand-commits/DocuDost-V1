@@ -15,8 +15,6 @@ def call_openrouter(key, img_b64, model_name):
     headers = {
         "Authorization": f"Bearer {key}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:8501",
-        "X-Title": "DocuDost"
     }
     payload = {
         "model": model_name,
@@ -24,43 +22,38 @@ def call_openrouter(key, img_b64, model_name):
             {
                 "role": "user",
                 "content": [
-                    {"type": "text", "text": "Analyze this document and list 3 legal risks in Hinglish."},
+                    {"type": "text", "text": "Analyze this document and list 3 legal risks in Hinglish. Be quick!"},
                     {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}}
                 ]
             }
         ]
     }
-    response = requests.post(url, headers=headers, json=payload)
+    # Timeout 30 seconds ka taaki 'goom goom' na hota rahe
+    response = requests.post(url, headers=headers, json=payload, timeout=30)
     return response.json()
 
 if uploaded_file and api_key:
     img = Image.open(uploaded_file)
     st.image(img, width=300)
     
-    if st.button("Start Final Audit"):
+    if st.button("Instant Audit"):
         img_byte_arr = io.BytesIO()
         img.save(img_byte_arr, format='JPEG')
         img_b64 = base64.b64encode(img_byte_arr.getvalue()).decode('utf-8')
 
-        # List of models currently active on OpenRouter (2026 names)
-        # Inhe ek-ek karke try karega
-        models_to_test = [
-            "google/gemini-flash-1.5-8b", 
-            "google/gemini-2.0-flash-exp:free",
-            "meta-llama/llama-3.2-11b-vision-instruct",
-            "google/gemini-flash-1.5"
-        ]
+        # 2026 ka sabse fast model jo OpenRouter par FREE hai
+        fast_model = "google/gemini-2.0-flash-exp:free"
         
-        success = False
-        for m in models_to_test:
-            with st.spinner(f"Trying Model: {m}..."):
-                result = call_openrouter(api_key, img_b64, m)
+        with st.spinner(f"Processing with {fast_model}..."):
+            try:
+                result = call_openrouter(api_key, img_b64, fast_model)
                 if 'choices' in result:
-                    st.success(f"Bhai, Ho Gaya! (Model: {m})")
+                    st.success("Analysis Complete!")
                     st.write(result['choices'][0]['message']['content'])
-                    success = True
-                    break
-        
-        if not success:
-            st.error("Bhai, OpenRouter par koi Vision model response nahi de raha.")
-            st.json(result) # Taki humein exact error dikhe
+                else:
+                    st.error("Model busy, trying fallback...")
+                    # Agar pehla fail ho toh Llama try karein
+                    result_fallback = call_openrouter(api_key, img_b64, "meta-llama/llama-3.2-11b-vision-instruct")
+                    st.write(result_fallback['choices'][0]['message']['content'])
+            except Exception as e:
+                st.error(f"Slow connection: {e}")
