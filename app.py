@@ -18,8 +18,18 @@ if uploaded_file and api_key:
     if st.button("Analyze Document"):
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-1.5-flash')
-        response = model.generate_content(["Audit this legal document and list 3 risks in Hinglish.", img])
+if st.button("Analyze Document"):
+    try:
+        genai.configure(api_key=api_key.strip()) # strip() space hata dega
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        # Image ko sahi format mein bhejna
+        response = model.generate_content([
+            "Audit this legal document image and list 3 risks in Hinglish.", 
+            img
+        ])
+        
         st.markdown("### 📋 Audit Report")
         st.write(response.text)
-elif not api_key and uploaded_file:
-    st.warning("Please enter your API Key in the sidebar.")
+    except Exception as e:
+        st.error(f"AI Error: {e}")
