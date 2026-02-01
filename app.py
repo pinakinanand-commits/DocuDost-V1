@@ -19,21 +19,27 @@ if uploaded_file and api_key:
             # Step 1: Configuration
             genai.configure(api_key=api_key.strip())
             
-            # Step 2: Using the most stable model name for v1beta
-            model = genai.GenerativeModel('gemini-1.5-pro')
-            
-            with st.spinner('Scanning Document...'):
+            # Step 2: Flash model name (v1beta ke liye sabse best)
+            # Agar ye kaam na kare, toh niche wala pro model try hoga
+            try:
+                model = genai.GenerativeModel('gemini-1.5-flash')
                 response = model.generate_content([
                     "Analyze this document and list 3 legal risks in Hinglish.", 
                     img
                 ])
-                st.markdown("### 📋 Audit Report")
-                st.write(response.text)
+            except:
+                model = genai.GenerativeModel('gemini-pro-vision')
+                response = model.generate_content([
+                    "Analyze this document and list 3 legal risks in Hinglish.", 
+                    img
+                ])
+
+            st.markdown("### 📋 Audit Report")
+            st.write(response.text)
                 
         except Exception as e:
-            # Yeh block hona zaroori hai SyntaxError hatane ke liye
             st.error(f"Error: {e}")
-            st.info("Check if your API Key is correct and active.")
+            st.info("Check if Generative Language API is enabled in your Google Cloud Console.")
 
 elif not api_key and uploaded_file:
     st.warning("Please enter your API Key in the sidebar.")
