@@ -8,47 +8,33 @@ st.title("🛡️ DocuDost: AI Legal Auditor")
 with st.sidebar:
     api_key = st.text_input("Enter Gemini API Key", type="password")
 
-uploaded_file = st.file_uploader("Upload Document", type=["png", "jpg", "jpeg"])
+uploaded_file = st.file_uploader("Upload Document Image", type=["png", "jpg", "jpeg"])
 
 if uploaded_file and api_key:
     img = Image.open(uploaded_file)
     st.image(img, caption="Document Loaded", width=300)
     
-    if st.button("Analyze Now"):
+    if st.button("Analyze Document"):
         try:
-            # 4 spaces ka gap zaroori hai try ke niche
+            # Step 1: Config
             genai.configure(api_key=api_key.strip())
             
-            # Model selection
-        try:
-            genai.configure(api_key=api_key.strip())
+            # Step 2: Use stable model name
+            model = genai.GenerativeModel('gemini-1.5-flash')
             
-            # Full path use karne se Google confusion nahi karega
-            model = genai.GenerativeModel(model_name='models/gemini-1.5-flash')
-            
-            with st.spinner('DocuDost is auditing...'):
+            with st.spinner('Scanning Document...'):
+                # Note: Prompt and Image
                 response = model.generate_content([
                     "Analyze this document and list 3 legal risks in Hinglish.", 
                     img
                 ])
-                st.success("Analysis Complete!")
-                st.write(response.text)
-                
-        except Exception as e:
-            st.error(f"Error: {e}")            
-            with st.spinner('DocuDost is auditing...'):
-                response = model.generate_content([
-                    "Analyze this document and list 3 legal risks in Hinglish.", 
-                    img
-                ])
-                st.success("Analysis Done!")
                 st.markdown("### 📋 Audit Report")
                 st.write(response.text)
                 
         except Exception as e:
-            # 4 spaces ka gap yahan bhi
+            # Yeh 'except' block SyntaxError hatane ke liye zaroori hai
             st.error(f"Error: {e}")
-            st.info("Bhai, agar 404 aaye toh Google AI Studio mein Naya Project banao.")
+            st.info("Check if Generative Language API is enabled in Google AI Studio.")
 
 elif not api_key and uploaded_file:
     st.warning("Please enter your API Key in the sidebar.")
