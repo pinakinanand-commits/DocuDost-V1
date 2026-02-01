@@ -5,32 +5,33 @@ from PIL import Image
 import io
 
 st.set_page_config(page_title="DocuDost AI", page_icon="🛡️")
-st.title("🛡️ DocuDost: AI Legal Auditor (Stable Mode)")
+st.title("🛡️ DocuDost: AI Legal Auditor")
 
-# Sidebar for OpenRouter Key
 api_key = st.sidebar.text_input("Enter OpenRouter API Key", type="password")
 uploaded_file = st.file_uploader("Upload Document", type=["png", "jpg", "jpeg"])
 
-def analyze_document_openrouter(key, img_file):
+def analyze_document_final(key, img_file):
     img_byte_arr = io.BytesIO()
     img_file.save(img_byte_arr, format='JPEG')
     img_b64 = base64.b64encode(img_byte_arr.getvalue()).decode('utf-8')
 
-    # OpenRouter API Endpoint (Sabse Stable)
     url = "https://openrouter.ai/api/v1/chat/completions"
     
     headers = {
         "Authorization": f"Bearer {key}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "HTTP-Referer": "http://localhost:8501", # Streamlit local referer
+        "X-Title": "DocuDost AI"
     }
     
     payload = {
-        "model": "meta-llama/llama-3.2-11b-vision-instruct:free", # FREE MODEL
+        # YEH MODEL NAME SABSE STABLE HAI OPENROUTER PAR
+        "model": "google/gemini-flash-1.5", 
         "messages": [
             {
                 "role": "user",
                 "content": [
-                    {"type": "text", "text": "Analyze this document and list 3 legal risks in Hinglish."},
+                    {"type": "text", "text": "Analyze this legal document and list 3 risks in Hinglish."},
                     {
                         "type": "image_url",
                         "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}
@@ -47,14 +48,14 @@ if uploaded_file and api_key:
     img = Image.open(uploaded_file)
     st.image(img, width=300)
     
-    if st.button("Final Analysis"):
-        with st.spinner("Analyzing via Llama-3 (Stable)..."):
-            result = analyze_document_openrouter(api_key, img)
+    if st.button("Run Audit"):
+        with st.spinner("Connecting to OpenRouter..."):
+            result = analyze_document_final(api_key, img)
             
             if 'choices' in result:
                 text = result['choices'][0]['message']['content']
-                st.success("Bhai, Ho Gaya! Report dekho:")
+                st.success("Analysis Complete!")
                 st.write(text)
             else:
-                st.error("Error Detail:")
-                st.json(result)
+                st.error("Model Error")
+                st.json(result) # Isse exact model name pata chal jayega
