@@ -22,48 +22,35 @@ st.title("🛡️ DocuDost AI")
 st.markdown("<h5 style='color: #6c757d; font-style: italic; margin-top: -20px; font-weight: 400;'>Your silent drafting partner.</h5>", unsafe_allow_html=True)
 st.write("---")
 
-# 4. SIDEBAR ACCESS
+# 4. SIDEBAR (Access & Plans)
 with st.sidebar:
     st.header("🔒 Access Control")
     try:
+        # Dashboard ke secrets se uthayega
         ADMIN_PASSWORD = st.secrets["APP_PASSWORD"]
         api_key = st.secrets["OPENROUTER_API_KEY"]
     except:
-        st.error("Secrets missing! Please set them in Streamlit Dashboard.")
+        st.error("Secrets missing! Dashboard check karein.")
         st.stop()
         
-    user_pass = st.text_input("Enter Access Password", type="password")
-    # --- SIDEBAR ACCESS (Line 30-45 ke aas paas) ---
-with st.sidebar:
-    st.header("🔒 Access Control")
-    try:
-        ADMIN_PASSWORD = st.secrets["APP_PASSWORD"]
-        api_key = st.secrets["OPENROUTER_API_KEY"]
-    except:
-        st.error("Secrets missing! Please set them in Streamlit Dashboard.")
-        st.stop()
-        
-    user_pass = st.text_input("Enter Access Password", type="password")
-
-    # --- YAHAN ADD KAREIN PRICING SECTION ---
+    # Unique Key di hai taaki Duplicate Error na aaye
+    user_pass = st.text_input("Enter Access Password", type="password", key="main_pass")
+    
     st.markdown("---")
     st.subheader("💎 Future Plans")
-    plan = st.radio("Select Plan:", ["Basic (Free)", "Standard (₹99)", "Professional (Full Access)"])
+    plan = st.radio("Select Plan (Beta):", 
+                    ["Basic (Free)", "Standard (₹99)", "Professional (Full Access)"], 
+                    key="plan_selection")
     
     if plan == "Standard (₹99)":
         st.info("Coming Soon: 50 pages per month for just ₹99!")
     elif plan == "Professional (Full Access)":
         st.info("Coming Soon: Unlimited audits for power users.")
     else:
-        st.success("Beta Phase: Currently 1 page daily is FREE!")
-    
-    st.markdown("---")
-    st.info("Bhai, ye app aapka 'Silent Partner' hai, aapka data safe hai.")
-    st.markdown("---")
-    st.info("Bhai, ye app aapka 'Silent Partner' hai, aapka data safe hai.")
+        st.success("Beta Phase: 1 page daily is currently FREE!")
 
-# 5. MAIN LOGIC (File Upload)
-uploaded_file = st.file_uploader("Upload Legal Document (Photo)", type=["png", "jpg", "jpeg"])
+# 5. MAIN LOGIC (File Upload & AI)
+uploaded_file = st.file_uploader("Upload Document Photo", type=["png", "jpg", "jpeg"])
 
 def analyze_doc(key, img_obj):
     img_byte_arr = io.BytesIO()
@@ -79,7 +66,7 @@ def analyze_doc(key, img_obj):
             {
                 "role": "user",
                 "content": [
-                    {"type": "text", "text": "Analyze this legal doc. List 3 'KHATRA:' (risks) and 1 'SUGGESTION:' in Hinglish. Be professional and clear."},
+                    {"type": "text", "text": "Analyze this legal doc. List 3 'KHATRA:' (risks) and 1 'SUGGESTION:' in Hinglish. Keep it short and professional."},
                     {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}}
                 ]
             }
@@ -88,7 +75,6 @@ def analyze_doc(key, img_obj):
     response = requests.post(url, headers=headers, json=payload)
     return response.json()
 
-# 6. APP EXECUTION
 if uploaded_file:
     col1, col2 = st.columns([1, 1.2])
     
@@ -97,15 +83,15 @@ if uploaded_file:
         st.image(img_preview, caption="Document Scan", use_container_width=True)
     
     with col2:
-        if st.button("🔍 Analyze Document Now"):
+        if st.button("🔍 Analyze Now"):
             if user_pass != ADMIN_PASSWORD:
-                st.error("Galat Password! Sahi password daalein.")
+                st.error("Galat Password!")
             else:
                 with st.spinner("DocuDost AI is working silently..."):
                     result = analyze_doc(api_key, img_preview)
                     if 'choices' in result:
                         report = result['choices'][0]['message']['content']
-                        st.subheader("📋 Professional Audit Report")
+                        st.subheader("📋 Audit Report")
                         
                         lines = report.split('\n')
                         for line in lines:
@@ -119,8 +105,8 @@ if uploaded_file:
                         st.markdown("""
                             <div class='trust-box'>
                                 <b>✨ DocuDost Tip:</b> Ye audit aapki help ke liye hai. 
-                                Ek final legal check ke liye vakeel se consult karna hamesha behtar hota hai.
+                                Ek final check ke liye vakeel se consult karna hamesha behtar hai.
                             </div>
                         """, unsafe_allow_html=True)
                     else:
-                        st.error("Analysis failed. API key ya balance check karein.")
+                        st.error("API error! Please check balance.")
