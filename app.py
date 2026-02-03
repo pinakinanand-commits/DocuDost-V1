@@ -33,6 +33,32 @@ with st.sidebar:
         st.stop()
         
     user_pass = st.text_input("Enter Access Password", type="password")
+    # --- SIDEBAR ACCESS (Line 30-45 ke aas paas) ---
+with st.sidebar:
+    st.header("🔒 Access Control")
+    try:
+        ADMIN_PASSWORD = st.secrets["APP_PASSWORD"]
+        api_key = st.secrets["OPENROUTER_API_KEY"]
+    except:
+        st.error("Secrets missing! Please set them in Streamlit Dashboard.")
+        st.stop()
+        
+    user_pass = st.text_input("Enter Access Password", type="password")
+
+    # --- YAHAN ADD KAREIN PRICING SECTION ---
+    st.markdown("---")
+    st.subheader("💎 Future Plans")
+    plan = st.radio("Select Plan:", ["Basic (Free)", "Standard (₹99)", "Professional (Full Access)"])
+    
+    if plan == "Standard (₹99)":
+        st.info("Coming Soon: 50 pages per month for just ₹99!")
+    elif plan == "Professional (Full Access)":
+        st.info("Coming Soon: Unlimited audits for power users.")
+    else:
+        st.success("Beta Phase: Currently 1 page daily is FREE!")
+    
+    st.markdown("---")
+    st.info("Bhai, ye app aapka 'Silent Partner' hai, aapka data safe hai.")
     st.markdown("---")
     st.info("Bhai, ye app aapka 'Silent Partner' hai, aapka data safe hai.")
 
