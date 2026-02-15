@@ -1,69 +1,97 @@
 import streamlit as st
 import os
 import requests
-import base64
-from PIL import Image
-import io
 import PyPDF2
 
-# --- 1. SETTINGS & SECURITY ---
-st.set_page_config(page_title="DocuDost AI | Global Secure", page_icon="🛡️", layout="centered")
+# --- 1. CONFIG & BRANDING ---
+st.set_page_config(page_title="Draft Auditor AI", layout="wide", page_icon="⚖️")
 
-# Hugging Face Secrets se data nikalna (Manager cannot see this)
-# Settings -> Secrets mein ye dono naam daalne honge
-try:
-    ADMIN_PASSWORD = os.environ["APP_PASSWORD"]
-    OPENROUTER_API_KEY = os.environ["OPENROUTER_API_KEY"]
-except KeyError:
-    st.error("⚠️ Security Keys missing! Please add them in Hugging Face Settings.")
-    st.stop()
+# --- 2. PROFESSIONAL CSS ---
+st.markdown("""
+<style>
+    .main { background-color: #f8f9fa; }
+    .price-card { padding: 15px; border-radius: 10px; background: white; border-top: 5px solid #007bff; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; }
+    .report-section { background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #28a745; margin-bottom: 10px; }
+    .stButton>button { background-color: #007bff; color: white; font-weight: bold; border-radius: 8px; }
+</style>
+""", unsafe_allow_html=True)
 
-# --- 2. SESSION STATE (Login Check) ---
-if 'authenticated' not in st.session_state:
-    st.session_state.authenticated = False
+# --- 3. SECRETS ---
+API_KEY = os.environ.get("OPENROUTER_API_KEY")
+APP_PASS = os.environ.get("APP_PASSWORD")
 
-# --- 3. LOGIN INTERFACE (No Sidebar) ---
-if not st.session_state.authenticated:
-    st.title("🛡️ DocuDost AI: Secure Login")
-    st.info("Welcome to the Global Prototype. Please enter your access key.")
-    
-    with st.container():
-        input_pass = st.text_input("Enter Access Password", type="password")
-        if st.button("Unlock System 🚀"):
-            if input_pass == ADMIN_PASSWORD:
-                st.session_state.authenticated = True
+if 'auth' not in st.session_state: st.session_state.auth = False
+
+# --- 4. SECURE LOGIN ---
+if not st.session_state.auth:
+    col1, col2, col3 = st.columns([1,2,1])
+    with col2:
+        st.image("https://img.icons8.com/fluency/96/checked-user-male.png", width=80)
+        st.subheader("Draft Auditor: Restricted Access")
+        pwd = st.text_input("Enter Founder/Investor Key", type="password")
+        if st.button("Unlocking Global Dashboard"):
+            if pwd == APP_PASS:
+                st.session_state.auth = True
                 st.rerun()
-            else:
-                st.error("❌ Invalid Password. Access Denied.")
+            else: st.error("❌ Unauthorized Access")
     st.stop()
 
-# --- 4. MAIN APP (After Login) ---
-st.title("🔍 DocuDost AI: Legal Auditor")
-st.markdown("---")
+# --- 5. MAIN DASHBOARD ---
+st.title("⚖️ Draft Auditor: Enterprise AI")
+st.write("Professional Legal Document Screening & Risk Assessment.")
 
-# Language & Region selection on Main Page (Mobile Friendly)
-col1, col2 = st.columns(2)
-with col1:
-    language = st.selectbox("🌍 Report Language", ["English", "Hindi (हिन्दी)", "Gujarati (ગુજરાતી)"])
-with col2:
-    region = st.selectbox("🌐 Target Region", ["India 🇮🇳", "Dubai/Global 🌍"])
+# --- 6. PRICE LIST SECTION (Investor Delight) ---
+st.markdown("### 💰 Audit Pricing Models")
+p_col1, p_col2, p_col3 = st.columns(3)
+with p_col1:
+    st.markdown("<div class='price-card'><h4>Standard (India)</h4><h2>₹59</h2><p>Per Document Scan</p></div>", unsafe_allow_html=True)
+with p_col2:
+    st.markdown("<div class='price-card'><h4>Global (Dubai)</h4><h2>$0.99</h2><p>Per Document Scan</p></div>", unsafe_allow_html=True)
+with p_col3:
+    st.markdown("<div class='price-card'><h4>Enterprise</h4><h2>Custom</h2><p>API for Law Firms</p></div>", unsafe_allow_html=True)
 
-uploaded_file = st.file_uploader("Upload Document (PDF or Image)", type=["pdf", "png", "jpg", "jpeg"])
+st.write("---")
+
+# --- 7. UPLOAD & ANALYSIS ---
+uploaded_file = st.file_uploader("Upload Agreement (PDF or Image)", type=["pdf", "png", "jpg", "jpeg"])
 
 if uploaded_file:
-    st.success("Document Uploaded! Click Audit to start.")
-    if st.button("Start Global Audit 🔎"):
-        with st.spinner("Analyzing with Enterprise-grade AI..."):
-            # Yahan wahi 6-section logic chalega jo humne pehle banaya tha
-            # Bas header mein OPENROUTER_API_KEY use hoga
-            st.write("✅ Audit Report Generating...")
-            # (Audit Code Implementation...)
+    if st.button("🚀 Start Deep AI Audit"):
+        with st.spinner("AI Brain (Gemini 2.0) is reading the fine print..."):
+            # Text extraction (PDF focus)
+            content = ""
+            if uploaded_file.type == "application/pdf":
+                reader = PyPDF2.PdfReader(uploaded_file)
+                for page in reader.pages: content += page.extract_text()
+            else:
+                content = "This is an image-based legal document. Please perform OCR and analyze."
 
-# Sidebar mein sirf Global Info rakhein
-with st.sidebar:
-    st.header("DocuDost Global")
-    st.write("📍 Status: **Active (Hugging Face Secure)**")
-    st.write("🛡️ Security: **End-to-End Encrypted**")
-    if st.button("Logout"):
-        st.session_state.authenticated = False
-        st.rerun()
+            # AI CALL (OpenRouter)
+            prompt = f"Analyze this legal draft and provide a professional report in 4 parts: 1. Risk Summary, 2. Financial Trap Check, 3. Missing Clauses, 4. Final Score (0-100). Text: {content[:4000]}"
+            
+            try:
+                response = requests.post(
+                    url="https://openrouter.ai/api/v1/chat/completions",
+                    headers={"Authorization": f"Bearer {API_KEY}"},
+                    json={
+                        "model": "google/gemini-2.0-flash-001",
+                        "messages": [{"role": "user", "content": prompt}]
+                    }
+                )
+                report = response.json()['choices'][0]['message']['content']
+                
+                # Showing Results
+                st.markdown("### 📊 AI Audit Report")
+                st.markdown(f"<div class='report-section'>{report}</div>", unsafe_allow_html=True)
+                st.download_button("📩 Download Audit Report", report, file_name="Draft_Audit_Report.txt")
+                
+            except Exception as e:
+                st.error(f"API Connection Error! Check your OpenRouter Key. {e}")
+
+# Sidebar Footer
+st.sidebar.markdown("---")
+st.sidebar.write("📍 **Status:** Global Prototype")
+st.sidebar.write("🏢 **Project:** Draft Auditor AI")
+if st.sidebar.button("Logout"):
+    st.session_state.auth = False
+    st.rerun()
