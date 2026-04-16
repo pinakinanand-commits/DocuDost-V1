@@ -1,97 +1,63 @@
 import streamlit as st
+import google.generativeai as genai
 import os
-import requests
-import PyPDF2
 
-# --- 1. CONFIG & BRANDING ---
-st.set_page_config(page_title="Draft Auditor AI", layout="wide", page_icon="⚖️")
+# --- ADVANCED CONFIGURATION ---
+st.set_page_config(page_title="DocuDost AI | Legal Auditor", layout="wide")
 
-# --- 2. PROFESSIONAL CSS ---
+# Custom CSS for Professional "Audit Boxes"
 st.markdown("""
-<style>
-    .main { background-color: #f8f9fa; }
-    .price-card { padding: 15px; border-radius: 10px; background: white; border-top: 5px solid #007bff; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; }
-    .report-section { background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #28a745; margin-bottom: 10px; }
-    .stButton>button { background-color: #007bff; color: white; font-weight: bold; border-radius: 8px; }
-</style>
-""", unsafe_allow_html=True)
+    <style>
+    .risk-high { background-color: #ffcccc; padding: 10px; border-radius: 5px; border-left: 5px solid red; margin-bottom: 10px; }
+    .risk-safe { background-color: #ccffcc; padding: 10px; border-radius: 5px; border-left: 5px solid green; margin-bottom: 10px; }
+    .header-style { font-size: 25px; font-weight: bold; color: #1E3A8A; }
+    </style>
+    """, unsafe_allow_html=True)
 
-# --- 3. SECRETS ---
-API_KEY = os.environ.get("OPENROUTER_API_KEY")
-APP_PASS = os.environ.get("APP_PASSWORD")
+# --- GOOGLE GEMINI SETUP ---
+# Securely getting API Key (Hugging Face Secrets mein 'GOOGLE_API_KEY' naam se save karein)
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
-if 'auth' not in st.session_state: st.session_state.auth = False
+# Advanced System Instruction for Google Evaluation
+SYSTEM_PROMPT = """
+You are the DocuDost AI Legal Auditor. Your task is to perform a high-precision audit of legal contracts.
+For every document:
+1. Identify hidden risks, unfair clauses, and 'traps'.
+2. Categorize them as 'HIGH RISK' (Red) or 'SAFE/STANDARD' (Green).
+3. Provide a clear 'Simple English' explanation for common people.
+4. Suggest a counter-clause to protect the user.
+Format your response as a professional audit report.
+"""
 
-# --- 4. SECURE LOGIN ---
-if not st.session_state.auth:
-    col1, col2, col3 = st.columns([1,2,1])
-    with col2:
-        st.image("https://img.icons8.com/fluency/96/checked-user-male.png", width=80)
-        st.subheader("Draft Auditor: Restricted Access")
-        pwd = st.text_input("Enter Founder/Investor Key", type="password")
-        if st.button("Unlocking Global Dashboard"):
-            if pwd == APP_PASS:
-                st.session_state.auth = True
-                st.rerun()
-            else: st.error("❌ Unauthorized Access")
-    st.stop()
+model = genai.GenerativeModel(
+    model_name="gemini-2.0-flash",
+    system_instruction=SYSTEM_PROMPT
+)
 
-# --- 5. MAIN DASHBOARD ---
-st.title("⚖️ Draft Auditor: Enterprise AI")
-st.write("Professional Legal Document Screening & Risk Assessment.")
+# --- UI LAYOUT ---
+st.markdown('<p class="header-style">🛡️ DocuDost AI: Advanced Legal Auditor</p>', unsafe_allow_html=True)
+st.info("Directly auditing via Google Gemini 2.0 Flash Engine | Secure & Stateless")
 
-# --- 6. PRICE LIST SECTION (Investor Delight) ---
-st.markdown("### 💰 Audit Pricing Models")
-p_col1, p_col2, p_col3 = st.columns(3)
-with p_col1:
-    st.markdown("<div class='price-card'><h4>Standard (India)</h4><h2>₹59</h2><p>Per Document Scan</p></div>", unsafe_allow_html=True)
-with p_col2:
-    st.markdown("<div class='price-card'><h4>Global (Dubai)</h4><h2>$0.99</h2><p>Per Document Scan</p></div>", unsafe_allow_html=True)
-with p_col3:
-    st.markdown("<div class='price-card'><h4>Enterprise</h4><h2>Custom</h2><p>API for Law Firms</p></div>", unsafe_allow_html=True)
+uploaded_file = st.file_file_uploader("Upload Contract (PDF or Image)", type=['pdf', 'jpg', 'png'])
 
-st.write("---")
-
-# --- 7. UPLOAD & ANALYSIS ---
-uploaded_file = st.file_uploader("Upload Agreement (PDF or Image)", type=["pdf", "png", "jpg", "jpeg"])
-
-if uploaded_file:
-    if st.button("🚀 Start Deep AI Audit"):
-        with st.spinner("AI Brain (Gemini 2.0) is reading the fine print..."):
-            # Text extraction (PDF focus)
-            content = ""
-            if uploaded_file.type == "application/pdf":
-                reader = PyPDF2.PdfReader(uploaded_file)
-                for page in reader.pages: content += page.extract_text()
-            else:
-                content = "This is an image-based legal document. Please perform OCR and analyze."
-
-            # AI CALL (OpenRouter)
-            prompt = f"Analyze this legal draft and provide a professional report in 4 parts: 1. Risk Summary, 2. Financial Trap Check, 3. Missing Clauses, 4. Final Score (0-100). Text: {content[:4000]}"
-            
+if uploaded_file is not None:
+    if st.button("🚀 Start Deep Audit"):
+        with st.spinner("Analyzing clauses for hidden traps..."):
             try:
-                response = requests.post(
-                    url="https://openrouter.ai/api/v1/chat/completions",
-                    headers={"Authorization": f"Bearer {API_KEY}"},
-                    json={
-                        "model": "google/gemini-2.0-flash-001",
-                        "messages": [{"role": "user", "content": prompt}]
-                    }
-                )
-                report = response.json()['choices'][0]['message']['content']
+                # Processing (Simulated for this snippet - use your PDF-to-Text logic here)
+                content = uploaded_file.read() # Basic read
                 
-                # Showing Results
-                st.markdown("### 📊 AI Audit Report")
-                st.markdown(f"<div class='report-section'>{report}</div>", unsafe_allow_html=True)
-                st.download_button("📩 Download Audit Report", report, file_name="Draft_Audit_Report.txt")
+                # AI Call
+                response = model.generate_content(f"Audit this document: {content}")
+                
+                st.subheader("Audit Results")
+                st.markdown(response.text)
+                
+                st.success("Audit Complete. No data was stored on our servers.")
                 
             except Exception as e:
-                st.error(f"API Connection Error! Check your OpenRouter Key. {e}")
+                st.error(f"Technical Error: {e}")
 
-# Sidebar Footer
-st.sidebar.markdown("---")
-st.sidebar.write("📍 **Status:** Global Prototype")
-st.sidebar.write("🏢 **Project:** Draft Auditor AI")
-if st.sidebar.button("Logout"):
-    st.session_state.auth = False
-    st.rerun()
+# --- FOOTER FOR GOOGLE ACCELERATOR ---
+st.markdown("---")
+st.caption("DocuDost AI Prototype | Built for Google for Startups Accelerator 2026")
